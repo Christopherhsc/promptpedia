@@ -1,53 +1,61 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-
+import { useRouter } from "next/router";
 import Form from "@components/Form";
 
 const EditPrompt = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const promptId = searchParams.get("id");
+  const { id: promptId } = router.query; // using router.query
 
   const [submitting, setIsSubmitting] = useState(false);
   const [post, setPost] = useState({ prompt: "", tag: "" });
 
   useEffect(() => {
-    const getPromptDetails = async () => {
-      const response = await fetch(`/api/prompt/${promptId}`);
+    if (promptId) {
+      const getPromptDetails = async () => {
+        try {
+          const response = await fetch(`/api/prompt/${promptId}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch prompt details');
+          }
+          const data = await response.json();
+          setPost({ prompt: data.prompt, tag: data.tag });
+        } catch (error) {
+          console.error(error);
+          // handle error (e.g., show error message to user)
+        }
+      };
 
-      const data = await response.json();
-
-      setPost({
-        prompt: data.prompt,
-        tag: data.tag,
-      });
-    };
-
-    if (promptId) getPromptDetails();
+      getPromptDetails();
+    }
   }, [promptId]);
 
   const updatePrompt = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!promptId) return alert("Prompt ID not found");
+    if (!promptId) {
+      alert("Prompt ID not found");
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch(`/api/prompt/${promptId}`, {
         method: "PATCH",
-        body: JSON.stringify({
-          prompt: post.prompt,
-          tag: post.tag,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: post.prompt, tag: post.tag }),
       });
 
-      if (response.ok) {
-        router.push("/");
+      if (!response.ok) {
+        throw new Error('Failed to update prompt');
       }
+
+      await router.push("/");
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      // handle error (e.g., show error message to user)
     } finally {
       setIsSubmitting(false);
     }
