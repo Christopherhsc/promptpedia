@@ -9,8 +9,7 @@ const Home = () => {
         <span className="orange_gradient text-center"> AI-Powered Prompts</span>
       </h1>
       <p className="desc text-center">
-        PromptPedia is an open-source AI prompting tool for modern world to
-        discover, create and share creative prompts
+        Snippet-Pedia is an open-source combination of HTML & CSS to create new and optimized frontend
       </p>
 
       <Feed />
