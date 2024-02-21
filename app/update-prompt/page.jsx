@@ -1,61 +1,52 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import Form from "@components/Form";
 
-const EditPrompt = () => {
+const UpdatePrompt = () => {
   const router = useRouter();
-  const { id: promptId } = router.query; // using router.query
+  const searchParams = useSearchParams();
+  const promptId = searchParams.get("id");
 
+  const [post, setPost] = useState({ prompt: "", tag: "", });
   const [submitting, setIsSubmitting] = useState(false);
-  const [post, setPost] = useState({ prompt: "", tag: "" });
 
   useEffect(() => {
-    if (promptId) {
-      const getPromptDetails = async () => {
-        try {
-          const response = await fetch(`/api/prompt/${promptId}`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch prompt details');
-          }
-          const data = await response.json();
-          setPost({ prompt: data.prompt, tag: data.tag });
-        } catch (error) {
-          console.error(error);
-          // handle error (e.g., show error message to user)
-        }
-      };
+    const getPromptDetails = async () => {
+      const response = await fetch(`/api/prompt/${promptId}`);
+      const data = await response.json();
 
-      getPromptDetails();
-    }
+      setPost({
+        prompt: data.prompt,
+        tag: data.tag,
+      });
+    };
+
+    if (promptId) getPromptDetails();
   }, [promptId]);
 
   const updatePrompt = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!promptId) {
-      alert("Prompt ID not found");
-      setIsSubmitting(false);
-      return;
-    }
+    if (!promptId) return alert("Missing PromptId!");
 
     try {
       const response = await fetch(`/api/prompt/${promptId}`, {
         method: "PATCH",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: post.prompt, tag: post.tag }),
+        body: JSON.stringify({
+          prompt: post.prompt,
+          tag: post.tag,
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update prompt');
+      if (response.ok) {
+        router.push("/");
       }
-
-      await router.push("/");
     } catch (error) {
-      console.error(error);
-      // handle error (e.g., show error message to user)
+      console.log(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +54,7 @@ const EditPrompt = () => {
 
   return (
     <Form
-      type="Edit"
+      type='Edit'
       post={post}
       setPost={setPost}
       submitting={submitting}
@@ -72,4 +63,4 @@ const EditPrompt = () => {
   );
 };
 
-export default EditPrompt;
+export default UpdatePrompt;
